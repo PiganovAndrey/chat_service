@@ -1,0 +1,29 @@
+FROM node:lts as builder
+
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+
+RUN npm install
+
+RUN npm ci
+
+COPY . .
+
+RUN npm run build
+
+FROM node:lts-slim as final
+
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+
+RUN npm install
+
+RUN npm ci --only=production
+
+COPY --from=builder /usr/src/app/dist ./dist
+
+EXPOSE 5007
+
+CMD ["node", "dist/main.js"]
